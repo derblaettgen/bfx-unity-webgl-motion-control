@@ -12,31 +12,38 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-
-      - name: Install Brotli
-        run: sudo apt-get install brotli
-
-      - name: Compress files with Brotli
-        run: |
-          brotli -o Build/build.js.br Build/build.js
-          brotli -o Build/build.wasm.br Build/build.wasm
-          brotli -o Build/data.data.br Build/data.data
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./Build
-          cname: your-custom-domain.com
 
       - name: Add .htaccess
         run: |
-          echo '<IfModule mod_headers.c>' > .htaccess
-          echo '  <FilesMatch "\.(js|wasm|data)\.br$">' >> .htaccess
+          echo '<IfModule mod_rewrite.c>' > .htaccess
+          echo '  RewriteEngine On' >> .htaccess
+          echo '  RewriteCond %{HTTP:Accept-Encoding} br' >> .htaccess
+          echo '  RewriteCond %{REQUEST_FILENAME}.br -f' >> .htaccess
+          echo '  RewriteRule ^(.*)$ $1.br [QSA,L]' >> .htaccess
+          echo '</IfModule>' >> .htaccess
+          echo '<IfModule mod_headers.c>' >> .htaccess
+          echo '  <FilesMatch "\.(js|wasm|data|framework.js|unityweb)\.br$">' >> .htaccess
           echo '    Header set Content-Encoding br' >> .htaccess
+          echo '    Header set Content-Type "application/octet-stream"' >> .htaccess
+          echo '  </FilesMatch>' >> .htaccess
+          echo '  <FilesMatch "\.js\.br$">' >> .htaccess
+          echo '    Header set Content-Type "application/javascript"' >> .htaccess
+          echo '  </FilesMatch>' >> .htaccess
+          echo '  <FilesMatch "\.wasm\.br$">' >> .htaccess
+          echo '    Header set Content-Type "application/wasm"' >> .htaccess
+          echo '  </FilesMatch>' >> .htaccess
+          echo '  <FilesMatch "\.data\.br$">' >> .htaccess
+          echo '    Header set Content-Type "application/octet-stream"' >> .htaccess
+          echo '  </FilesMatch>' >> .htaccess
+          echo '  <FilesMatch "\.framework.js\.br$">' >> .htaccess
+          echo '    Header set Content-Type "application/javascript"' >> .htaccess
+          echo '  </FilesMatch>' >> .htaccess
+          echo '  <FilesMatch "\.unityweb\.br$">' >> .htaccess
+          echo '    Header set Content-Type "application/octet-stream"' >> .htaccess
           echo '  </FilesMatch>' >> .htaccess
           echo '</IfModule>' >> .htaccess
