@@ -1,0 +1,42 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install Brotli
+        run: sudo apt-get install brotli
+
+      - name: Compress files with Brotli
+        run: |
+          brotli -o Build/build.js.br Build/build.js
+          brotli -o Build/build.wasm.br Build/build.wasm
+          brotli -o Build/data.data.br Build/data.data
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./Build
+          cname: your-custom-domain.com
+
+      - name: Add .htaccess
+        run: |
+          echo '<IfModule mod_headers.c>' > .htaccess
+          echo '  <FilesMatch "\.(js|wasm|data)\.br$">' >> .htaccess
+          echo '    Header set Content-Encoding br' >> .htaccess
+          echo '  </FilesMatch>' >> .htaccess
+          echo '</IfModule>' >> .htaccess
