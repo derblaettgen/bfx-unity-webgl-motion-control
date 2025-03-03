@@ -1,13 +1,19 @@
 <IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteCond %{HTTP:Accept-Encoding} br
-  RewriteCond %{REQUEST_FILENAME}.br -f
-  RewriteRule ^(.*)$ $1.br [QSA,L]
-</IfModule>
-
-<IfModule mod_headers.c>
-  <FilesMatch "\.br$">
-    Header set Content-Encoding br
-    Header set Content-Type "application/javascript"
-  </FilesMatch>
-</IfModule>
+    RewriteEngine On
+    RewriteCond %{HTTP:Accept-Encoding} br
+    RewriteCond %{REQUEST_FILENAME}.br -f
+    RewriteRule ^(.*)$ $1.br [QSA,L]
+  </IfModule>
+  
+  <IfModule mod_headers.c>
+    <FilesMatch "\.(js|wasm|data)\.br$">
+      Header set Content-Encoding br
+      Header set Content-Type "application/octet-stream"
+    </FilesMatch>
+    <FilesMatch "\.js\.br$">
+      Header set Content-Type "application/javascript"
+    </FilesMatch>
+    <FilesMatch "\.wasm\.br$">
+      Header set Content-Type "application/wasm"
+    </FilesMatch>
+  </IfModule>
